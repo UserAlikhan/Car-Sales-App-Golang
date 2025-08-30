@@ -30,10 +30,20 @@ func LoginUser(loginData *models.LoginDataModel) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
+		// if email is specified, it must be equal to one in the db
+		if loginData.Email != "" && loginData.Email != user.Email {
+			return "", fmt.Errorf("Invalid credentials. Please, try again.")
+		}
 	} else if loginData.Email != "" {
 		user, err = GetUserByEmail(loginData.Email)
 		if err != nil {
 			return "", err
+		}
+
+		// if username is specified, it must be equal to one in the db
+		if loginData.Username != "" && loginData.Username != user.Username {
+			return "", fmt.Errorf("Invalid credentials. Please, try again.")
 		}
 	} else {
 		return "", fmt.Errorf("Invalid credentials!")
