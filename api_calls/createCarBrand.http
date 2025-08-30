@@ -1,0 +1,7 @@
+POST http://localhost:3000/carBrand/createCarBrand
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlcm5hbWUiOiJhZG1pbjExMSIsImVtYWlsIjoia3J1dGlvMjQyQG1haWwucnUiLCJpc0FkbWluIjp0cnVlLCJleHAiOjE3NTkxNDgxOTR9.VtyeCyFIYYruV8v0q_IjAcVppaK-HtoTaknJf_MetFk
+
+{
+    "name": "Ford"
+}

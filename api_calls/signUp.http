@@ -1,0 +1,12 @@
+POST http://localhost:3000/users/signUp
+Content-Type: application/json
+
+{
+    "first_name": "Admin",
+    "last_name": "Adminovich",
+    "username": "admin111",
+    "email": "admin@mail.ru",
+    "phone_number": "3341246788",
+    "password": "AdminPassword",
+    "is_admin": true
+}
