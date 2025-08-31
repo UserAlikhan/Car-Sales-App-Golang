@@ -1,0 +1,6 @@
+POST http://localhost:3000/carModel/createCarModel
+
+{
+    "name": "Yukon",
+    "car_brand_id": 3
+}

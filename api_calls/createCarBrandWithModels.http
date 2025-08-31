@@ -1,0 +1,12 @@
+POST http://localhost:3000/carBrand/createCarBrandWithModels
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlcm5hbWUiOiJhZG1pbjExMSIsImVtYWlsIjoiYWRtaW5AbWFpbC5ydSIsImlzQWRtaW4iOnRydWUsImV4cCI6MTc1OTE5NjQwNn0.HLpM5UqSyu5OUwU3P85iilRxV7UzDSkHkg3t8ZzqU3Q
+
+{
+    "name": "Toyota",
+    "car_models": [
+        { "name": "Land Cruiser 200" },
+        { "name": "Camry" },
+        { "name": "Rav4" }
+    ]
+} 

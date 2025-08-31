@@ -97,6 +97,25 @@ func DeleteCarBrandHandler() gin.HandlerFunc {
 			ctx.JSON(http.StatusInternalServerError, err.Error())
 			return
 		}
+
 		ctx.JSON(http.StatusOK, "Car Brand was deleted successfully")
+	}
+}
+
+func CreateCarBrandWithModelsHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var carBrand models.CarBrandsModel
+		if err := ctx.ShouldBindJSON(&carBrand); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err := services.CreateCarBrandWithModels(&carBrand)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, carBrand)
 	}
 }

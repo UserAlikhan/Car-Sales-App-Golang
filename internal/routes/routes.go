@@ -17,6 +17,7 @@ func InitRoutes(r *gin.Engine) {
 		api.POST("/createCarBrand", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarBrandHandler())
 		api.PUT("/updateCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UpdateCarBrandHandler())
 		api.DELETE("/deleteCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.DeleteCarBrandHandler())
+		api.POST("/createCarBrandWithModels", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarBrandWithModelsHandler())
 	}
 
 	// Routes and supporting endpoints for /users
@@ -25,4 +26,11 @@ func InitRoutes(r *gin.Engine) {
 		api.POST("/signUp", handlers.SignUpHandler())
 		api.POST("/login", handlers.LoginHandler())
 	}
+
+	// Routes and supporting endpoints for /carModel
+	api = r.Group("/carModel")
+	{
+		api.POST("/createCarModel", handlers.CreateCarModel())
+	}
+
 }
