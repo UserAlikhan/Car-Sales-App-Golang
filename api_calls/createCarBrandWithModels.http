@@ -3,10 +3,12 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlcm5hbWUiOiJhZG1pbjExMSIsImVtYWlsIjoiYWRtaW5AbWFpbC5ydSIsImlzQWRtaW4iOnRydWUsImV4cCI6MTc1OTE5NjQwNn0.HLpM5UqSyu5OUwU3P85iilRxV7UzDSkHkg3t8ZzqU3Q
 
 {
-    "name": "Toyota",
+    "name": "Audi",
     "car_models": [
-        { "name": "Land Cruiser 200" },
-        { "name": "Camry" },
-        { "name": "Rav4" }
+        { "name": "Q5" },
+        { "name": "A5" },
+        { "name": "A8" },
+        { "name": "S5" },
+        { "name": "RS-Q8" }
     ]
 } 

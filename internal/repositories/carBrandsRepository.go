@@ -3,6 +3,8 @@ package repositories
 import (
 	"car_sales/internal/database"
 	"car_sales/internal/models"
+
+	"gorm.io/gorm"
 )
 
 func CreateCarBrand(carBrand *models.CarBrandsModel) error {
@@ -68,26 +70,31 @@ func DeleteCarBrand(id int) error {
 }
 
 func CreateCarBrandWithModels(carBrand *models.CarBrandsModel) error {
-	// separate carModels from carBrand
-	carModels := append([]models.CarModelsModel(nil), carBrand.CarModels...)
-	carBrand.CarModels = nil
-	// create car brand first
-	if err := database.DB.Create(carBrand).Error; err != nil {
-		return err
-	}
-	// add CarBrandID to each car model
-	for i := range carModels {
-		carModels[i].CarBrandID = carBrand.ID
-	}
-
-	// create car models
-	if len(carModels) > 0 {
-		if err := database.DB.Create(&carModels).Error; err != nil {
+	// if creating the brand succeeds but creating the models fails, I will have
+	// an orphan brand. A transaction avoids that.
+	// So, it is either everything is created or nothing is created
+	return database.DB.Transaction(func(tx *gorm.DB) error {
+		// separate carModels from carBrand
+		carModels := append([]models.CarModelsModel(nil), carBrand.CarModels...)
+		carBrand.CarModels = nil
+		// create car brand first
+		if err := tx.Create(carBrand).Error; err != nil {
 			return err
 		}
-	}
+		// add CarBrandID to each car model
+		for i := range carModels {
+			carModels[i].CarBrandID = carBrand.ID
+		}
 
-	carBrand.CarModels = carModels
+		// create car models
+		if len(carModels) > 0 {
+			if err := tx.Create(&carModels).Error; err != nil {
+				return err
+			}
+		}
+		// store car models back to the car brand
+		carBrand.CarModels = carModels
 
-	return nil
+		return nil
+	})
 }
