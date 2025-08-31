@@ -4,6 +4,7 @@ import (
 	"car_sales/internal/configs"
 	"car_sales/internal/database"
 	"car_sales/internal/routes"
+	"context"
 	"log"
 	"os"
 
@@ -24,8 +25,14 @@ func main() {
 
 	r := gin.Default()
 
+	// Setup s3 uploader
+	s3Conf, err := configs.NewS3Config(context.TODO(), os.Getenv("BUCKET_NAME"), os.Getenv("AWS_REGION"))
+	if err != nil {
+		log.Fatalf("Failed to initialize S3 config %v", err)
+	}
+
 	// Initialize routes
-	routes.InitRoutes(r)
+	routes.InitRoutes(r, s3Conf)
 
 	r.Run(":" + port)
 }

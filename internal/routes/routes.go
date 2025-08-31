@@ -1,13 +1,14 @@
 package routes
 
 import (
+	"car_sales/internal/configs"
 	"car_sales/internal/handlers"
 	"car_sales/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
 
-func InitRoutes(r *gin.Engine) {
+func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	// Routes and supporting endpoints for /carBrand
 	api := r.Group("/carBrand")
 	{
@@ -18,6 +19,7 @@ func InitRoutes(r *gin.Engine) {
 		api.PUT("/updateCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UpdateCarBrandHandler())
 		api.DELETE("/deleteCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.DeleteCarBrandHandler())
 		api.POST("/createCarBrandWithModels", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarBrandWithModelsHandler())
+		api.POST("/uploadLogo/:id", handlers.UploadLogoHandler(s3Conf))
 	}
 
 	// Routes and supporting endpoints for /users
