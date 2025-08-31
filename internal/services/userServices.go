@@ -24,7 +24,7 @@ func LoginUser(loginData *models.LoginDataModel) (string, error) {
 	var user *models.UsersModel
 	var err error
 
-	// check if user with exists
+	// check if user exists
 	if loginData.Username != "" {
 		user, err = GetUserByUsername(loginData.Username)
 		if err != nil {

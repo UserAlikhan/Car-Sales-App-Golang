@@ -1,7 +1,7 @@
 POST http://localhost:3000/carBrand/createCarBrand
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlcm5hbWUiOiJhZG1pbjExMSIsImVtYWlsIjoia3J1dGlvMjQyQG1haWwucnUiLCJpc0FkbWluIjp0cnVlLCJleHAiOjE3NTkxNDgxOTR9.VtyeCyFIYYruV8v0q_IjAcVppaK-HtoTaknJf_MetFk
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlcm5hbWUiOiJhZG1pbjExMSIsImVtYWlsIjoiYWRtaW5AbWFpbC5ydSIsImlzQWRtaW4iOnRydWUsImV4cCI6MTc1OTE5NjQwNn0.HLpM5UqSyu5OUwU3P85iilRxV7UzDSkHkg3t8ZzqU3Q
 
 {
-    "name": "Ford"
+    "name": "Dodge"
 }

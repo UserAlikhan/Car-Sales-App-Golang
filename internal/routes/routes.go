@@ -8,15 +8,18 @@ import (
 )
 
 func InitRoutes(r *gin.Engine) {
+	// Routes and supporting endpoints for /carBrand
 	api := r.Group("/carBrand")
 	{
 		api.GET("/getAllCarBrands", handlers.GetAllCarBrandsHandler())
 		api.GET("/:id", handlers.GetCarBrandByIdHandler())
+		// user must be authorized and must be an admin
 		api.POST("/createCarBrand", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarBrandHandler())
-		api.PUT("/updateCarBrand", handlers.UpdateCarBrandHandler())
-		api.DELETE("/deleteCarBrand", handlers.DeleteCarBrandHandler())
+		api.PUT("/updateCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UpdateCarBrandHandler())
+		api.DELETE("/deleteCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.DeleteCarBrandHandler())
 	}
 
+	// Routes and supporting endpoints for /users
 	api = r.Group("/users")
 	{
 		api.POST("/signUp", handlers.SignUpHandler())

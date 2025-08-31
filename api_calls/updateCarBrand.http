@@ -1,0 +1,7 @@
+PUT http://localhost:3000/carBrand/updateCarBrand/8
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlcm5hbWUiOiJhZG1pbjExMSIsImVtYWlsIjoiYWRtaW5AbWFpbC5ydSIsImlzQWRtaW4iOnRydWUsImV4cCI6MTc1OTE5NjQwNn0.HLpM5UqSyu5OUwU3P85iilRxV7UzDSkHkg3t8ZzqU3Q
+
+{
+    "name": "Dodge"
+}
