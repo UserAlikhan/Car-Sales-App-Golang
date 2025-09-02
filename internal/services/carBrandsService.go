@@ -34,3 +34,7 @@ func DeleteCarBrand(id int) error {
 func CreateCarBrandWithModels(carBrand *models.CarBrandsModel) error {
 	return repositories.CreateCarBrandWithModels(carBrand)
 }
+
+func SaveCarBrand(carBrand *models.CarBrandsModel) error {
+	return repositories.SaveCarBrand(carBrand)
+}

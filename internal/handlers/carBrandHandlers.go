@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"car_sales/internal/configs"
-	"car_sales/internal/database"
 	"car_sales/internal/models"
+	"car_sales/internal/repositories"
 	"car_sales/internal/services"
 	"car_sales/internal/utils"
 	"fmt"
@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
 )
 
@@ -155,12 +153,7 @@ func UploadLogoHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 		key := fmt.Sprintf("car_brands/%d/%s", id, header.Filename)
 
 		// upload to S3
-		_, err = s3Conf.Uploader.Upload(ctx, &s3.PutObjectInput{
-			Bucket:      &s3Conf.BucketName,
-			Key:         &key,
-			Body:        file,
-			ContentType: aws.String(header.Header.Get("Content-Type")),
-		})
+		_, err = utils.UploadToS3(ctx, s3Conf, &key, file, header.Header.Get("Content-Type"))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -168,9 +161,14 @@ func UploadLogoHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 
 		// save logo image to carBrand variable
 		carBrand.LogoImage = key
-		database.DB.Save(&carBrand)
+		// update the database
+		err = repositories.SaveCarBrand(carBrand)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 
-		signedURL, err := utils.GetSignedUrl(ctx, s3Conf, s3Conf.BucketName, key, 15*time.Minute)
+		signedURL, err := utils.GetSignedUrl(ctx, s3Conf, s3Conf.BucketName, key, 24*time.Hour)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

@@ -98,3 +98,7 @@ func CreateCarBrandWithModels(carBrand *models.CarBrandsModel) error {
 		return nil
 	})
 }
+
+func SaveCarBrand(carBrand *models.CarBrandsModel) error {
+	return database.DB.Save(carBrand).Error
+}
