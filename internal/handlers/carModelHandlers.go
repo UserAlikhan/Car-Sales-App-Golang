@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateCarModel() gin.HandlerFunc {
+func CreateCarModelHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var carModel *models.CarModelsModel
 

@@ -12,6 +12,8 @@ func init() {
 }
 
 func main() {
-	database.DB.AutoMigrate(&models.CarBrandsModel{}, &models.CarModelsModel{}, &models.UsersModel{})
-	// database.DB.AutoMigrate(&models.UsersModel{})
+	database.DB.AutoMigrate(
+		&models.CarBrandsModel{}, &models.CarModelsModel{},
+		&models.UsersModel{}, &models.CarPostsModel{},
+	)
 }

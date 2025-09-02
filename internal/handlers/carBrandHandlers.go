@@ -168,6 +168,7 @@ func UploadLogoHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 			return
 		}
 
+		// Get URL
 		signedURL, err := utils.GetSignedUrl(ctx, s3Conf, s3Conf.BucketName, key, 24*time.Hour)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

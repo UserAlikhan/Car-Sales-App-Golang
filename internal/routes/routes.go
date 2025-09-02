@@ -9,7 +9,7 @@ import (
 )
 
 func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
-	// Routes and supporting endpoints for /carBrand
+	// Route and supporting endpoints for /carBrand
 	api := r.Group("/carBrand")
 	{
 		api.GET("/getAllCarBrands", handlers.GetAllCarBrandsHandler())
@@ -22,17 +22,28 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 		api.POST("/uploadLogo/:id", handlers.UploadLogoHandler(s3Conf))
 	}
 
-	// Routes and supporting endpoints for /users
+	// Route and supporting endpoints for /users
 	api = r.Group("/users")
 	{
 		api.POST("/signUp", handlers.SignUpHandler())
 		api.POST("/login", handlers.LoginHandler())
 	}
 
-	// Routes and supporting endpoints for /carModel
+	// Route and supporting endpoints for /carModel
 	api = r.Group("/carModel")
 	{
-		api.POST("/createCarModel", handlers.CreateCarModel())
+		api.POST("/createCarModel", handlers.CreateCarModelHandler())
 	}
 
+	// Route and supporting endpoints for /carPost
+	api = r.Group("/carPost")
+	{
+		api.POST("/createCarPost", handlers.CreateCarPostHandler())
+	}
+
+	// Route and supporting endpoints for /carPostsImages
+	api = r.Group("/carPostsImages")
+	{
+		api.POST("/uploadImages", handlers.UploadImagesHandler())
+	}
 }
