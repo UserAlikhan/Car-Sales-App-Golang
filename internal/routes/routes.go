@@ -39,6 +39,8 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	api = r.Group("/carPost")
 	{
 		api.POST("/createCarPost", handlers.CreateCarPostHandler(s3Conf))
+		api.GET("/getAllUsersCarPosts/:userId", handlers.GetAllUsersCarPostsHandler())
+		api.DELETE("/deleteCarPost/:ID", handlers.DeleteCarPostHandler(s3Conf))
 	}
 
 	// Route and supporting endpoints for /carPostsImages

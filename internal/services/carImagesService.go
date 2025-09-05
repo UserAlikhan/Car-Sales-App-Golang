@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName string, files []*multipart.FileHeader, carPostId uint) ([]string, error) {
+func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName string, files []*multipart.FileHeader, carPostID uint) ([]string, error) {
 	if len(files) < 0 {
 		return nil, fmt.Errorf("No images uploaded.")
 	}
@@ -31,7 +31,7 @@ func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName 
 
 		defer file.Close()
 
-		key := fmt.Sprintf("car_posts_photos/%d/%s", int(carPostId), fileHeader.Filename)
+		key := fmt.Sprintf("car_posts_photos/%d/%s", int(carPostID), fileHeader.Filename)
 
 		// upload to s3
 		_, err = utils.UploadToS3(
@@ -43,7 +43,7 @@ func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName 
 		}
 
 		// if image was successfully uploaded to s3 create a database record
-		err = repositories.CreateCarImage(key, uint(carPostId))
+		err = repositories.CreateCarImage(key, uint(carPostID))
 
 		// get signed url
 		signedUrl, err := utils.GetSignedUrl(ctx, s3Conf, os.Getenv("BUCKET_NAME"), key, 24*time.Hour)

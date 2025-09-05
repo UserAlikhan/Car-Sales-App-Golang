@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type CarImagesModel struct {
 	gorm.Model
 	Path      string `json:"path" gorm:"not null; unique"`
-	CarPostId uint   `json:"car_post_id"`
+	CarPostID uint   `json:"car_post_id" gorm:"not null"`
 }
 
 func (CarImagesModel) TableName() string {

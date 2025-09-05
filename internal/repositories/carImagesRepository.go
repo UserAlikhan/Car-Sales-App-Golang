@@ -5,10 +5,10 @@ import (
 	"car_sales/internal/models"
 )
 
-func CreateCarImage(path string, carPostId uint) error {
+func CreateCarImage(path string, carPostID uint) error {
 	carImage := models.CarImagesModel{
 		Path:      path,
-		CarPostId: carPostId,
+		CarPostID: carPostID,
 	}
 
 	return database.DB.Create(&carImage).Error
