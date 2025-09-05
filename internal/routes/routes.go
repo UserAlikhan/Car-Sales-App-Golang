@@ -47,5 +47,6 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	api = r.Group("/carPostsImages")
 	{
 		api.POST("/uploadImages", handlers.UploadImagesHandler())
+		api.DELETE("/deleteSingleImage", handlers.DeleteCarPostImageHandler(s3Conf))
 	}
 }

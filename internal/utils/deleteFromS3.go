@@ -17,9 +17,21 @@ func DeleteFromS3(ctx context.Context, s3Conf *configs.S3Config, key string) err
 		return err
 	}
 
-	waiter := s3.NewObjectExistsWaiter(s3Conf.Client)
-	return waiter.Wait(ctx, &s3.HeadObjectInput{
+	return nil
+}
+
+// this function generates presigned url that user can use on frontend
+// to delete file by himself by simply clicking that url
+func GetPresignedDeleteURL(ctx context.Context, s3Conf *configs.S3Config, key string, expire time.Duration) (string, error) {
+	presignedClient := s3.NewPresignClient(s3Conf.Client)
+
+	req, err := presignedClient.PresignDeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &s3Conf.BucketName,
 		Key:    &key,
-	}, 30*time.Second)
+	}, s3.WithPresignExpires(expire))
+	if err != nil {
+		return "", nil
+	}
+
+	return req.URL, nil
 }

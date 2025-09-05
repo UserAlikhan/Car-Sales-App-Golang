@@ -13,12 +13,6 @@ import (
 
 func CreateCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		// Parse form
-		// if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil {
-		// 	ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse form: " + err.Error()})
-		// 	return
-		// }
-
 		var carPost models.CarPostsModel
 
 		jsonStr := ctx.PostForm("car_post")
@@ -77,7 +71,7 @@ func DeleteCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 			return
 		}
 
-		err = services.DeleteCarPost(s3Conf, uint(ID))
+		err = services.DeleteCarPost(ctx, s3Conf, uint(ID))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
