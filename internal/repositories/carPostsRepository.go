@@ -12,7 +12,11 @@ func CreateCarPost(carPost *models.CarPostsModel) (*models.CarPostsModel, error)
 func GetAllUsersCarPosts(userId uint) ([]*models.CarPostsModel, error) {
 	var carPosts []*models.CarPostsModel
 
-	result := database.DB.Where(&models.CarPostsModel{SellerID: userId}).Preload("CarModel").Preload("PostImages").Find(&carPosts)
+	result := database.DB.
+		Where(&models.CarPostsModel{SellerID: userId}).
+		Preload("CarModel").
+		Preload("PostImages").
+		Find(&carPosts)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -23,7 +27,22 @@ func GetAllUsersCarPosts(userId uint) ([]*models.CarPostsModel, error) {
 func GetCarPostById(ID uint) (*models.CarPostsModel, error) {
 	var carPost models.CarPostsModel
 
-	result := database.DB.Preload("PostImages").First(&carPost, ID)
+	result := database.DB.First(&carPost, ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &carPost, nil
+}
+
+func GetCarPostByIdWithPostImages(ID uint) (*models.CarPostsModel, error) {
+	var carPost models.CarPostsModel
+
+	result := database.DB.
+		Preload("CarModel").
+		Preload("CarModel.CarBrand").
+		Preload("PostImages").
+		First(&carPost, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}

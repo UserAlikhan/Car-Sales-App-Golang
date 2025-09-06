@@ -1,11 +1,14 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type CarModelsModel struct {
 	gorm.Model
 	Name       string          `json:"name" gorm:"not null; unique"`
 	CarBrandID uint            `json:"car_brand_id" gorm:"not null"`
+	CarBrand   *CarBrandsModel `json:"car_brand" gorm:"foreignKey:CarBrandID"`
 	CarPosts   []CarPostsModel `json:"car_posts" gorm:"foreignKey:CarModelID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 

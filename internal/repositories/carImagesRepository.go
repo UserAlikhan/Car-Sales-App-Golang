@@ -13,3 +13,7 @@ func CreateCarImage(path string, carPostID uint) error {
 
 	return database.DB.Create(&carImage).Error
 }
+
+func DeleteCarImageDBRecord(ID uint) error {
+	return database.DB.Unscoped().Delete(&models.CarImagesModel{}, ID).Error
+}

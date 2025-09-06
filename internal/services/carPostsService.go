@@ -5,7 +5,9 @@ import (
 	"car_sales/internal/models"
 	"car_sales/internal/repositories"
 	"car_sales/internal/utils"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
@@ -21,11 +23,11 @@ func GetAllUsersCarPosts(userId uint) ([]*models.CarPostsModel, error) {
 
 func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 	// Check if car post exists
-	carPost, err := repositories.GetCarPostById(ID)
+	carPost, err := repositories.GetCarPostByIdWithPostImages(ID)
 	if err != nil {
 		return err
 	}
-
+	// If there are images saved proceed
 	if len(carPost.PostImages) > 0 {
 		// get prefix
 		parts := strings.Split(carPost.PostImages[0].Path, "/")
@@ -54,4 +56,57 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 
 	// call delete car post
 	return repositories.DeleteCarPost(ID)
+}
+
+func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*models.CarPostsModel, []string, error) {
+	// get a car post with preloaded images
+	carPost, err := repositories.GetCarPostByIdWithPostImages(ID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// array for storing signed urls
+	signedURLs := make([]string, 0, len(carPost.PostImages))
+
+	// get a prefix
+	parts := strings.Split(carPost.PostImages[0].Path, "/")
+	parts = parts[:len(parts)-1]
+	prefix := strings.Join(parts, "/")
+
+	// get list of all present images in s3 bucket for the specific prefix
+	listOutput, err := s3Conf.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+		Bucket: &s3Conf.BucketName,
+		Prefix: &prefix,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// variable for storing keys from listoutput
+	var listOutputKeys []*string
+	// get all the keys from listoutput
+	for _, output := range listOutput.Contents {
+		listOutputKeys = append(listOutputKeys, output.Key)
+	}
+
+	// iterate through all images for the post
+	// and get signed url for post images
+	for _, image := range carPost.PostImages {
+		// get signed urls
+		signedURL, err := utils.GetSignedUrl(ctx, s3Conf, os.Getenv("BUCKET_NAME"), image.Path, 24*time.Hour)
+		if err != nil {
+			// call FindStringKeyStringValue method that looks for an image in s3
+			// if indeed there is no image in s3 delete the record from DB
+			if !utils.FindStringKeyStringValue(listOutputKeys, &image.Path) {
+				// delete the post image record
+				repositories.DeleteCarImageDBRecord(image.ID)
+			} else {
+				continue
+			}
+		}
+		// if everything is good append an array
+		signedURLs = append(signedURLs, signedURL)
+	}
+
+	return carPost, signedURLs, nil
 }

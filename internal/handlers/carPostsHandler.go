@@ -14,13 +14,13 @@ import (
 func CreateCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var carPost models.CarPostsModel
-
+		// get json data from car_post parameter
 		jsonStr := ctx.PostForm("car_post")
 		if err := json.Unmarshal([]byte(jsonStr), &carPost); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid car_post JSON."})
 			return
 		}
-
+		// create car post in the database
 		createdCarPost, err := services.CreateCarPost(&carPost)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -28,9 +28,10 @@ func CreateCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 		}
 
 		// If car post was created proceed to photos
-		// Get uploaded files for photos
+		// Get uploaded photos
 		files := ctx.Request.MultipartForm.File["photos"]
 
+		// call service layer that will proceed images upload
 		imageUrls, err := services.UploadCarPostImages(ctx, s3Conf, s3Conf.BucketName, files, createdCarPost.ID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -65,12 +66,14 @@ func GetAllUsersCarPostsHandler() gin.HandlerFunc {
 
 func DeleteCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// get ID parameter
 		ID, err := strconv.Atoi(ctx.Param("ID"))
 		if err != nil || ID == 0 {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid credentials."})
 			return
 		}
 
+		// call service layer that will proceed car post deletion
 		err = services.DeleteCarPost(ctx, s3Conf, uint(ID))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -78,5 +81,30 @@ func DeleteCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 		}
 
 		ctx.JSON(http.StatusOK, gin.H{"message": "Car Post was deleted successfully"})
+	}
+}
+
+func GetCarPostByIDHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// get ID parameter
+		ID, err := strconv.Atoi(ctx.Param("ID"))
+		if err != nil || ID == 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid credentials."})
+			return
+		}
+
+		carPost, image_urls, err := services.GetCarPostByID(ctx, s3Conf, uint(ID))
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			gin.H{
+				"carPost":    carPost,
+				"image_urls": image_urls,
+			},
+		)
 	}
 }

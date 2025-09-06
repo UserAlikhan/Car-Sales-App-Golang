@@ -13,7 +13,7 @@ import (
 )
 
 func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName string, files []*multipart.FileHeader, carPostID uint) ([]string, error) {
-	if len(files) < 0 {
+	if len(files) == 0 {
 		return nil, fmt.Errorf("No images uploaded.")
 	}
 
@@ -29,8 +29,7 @@ func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName 
 			return nil, fmt.Errorf("Failed to open file: ", err.Error())
 		}
 
-		defer file.Close()
-
+		// create a path in s3 bucket where file is gonna be stored
 		key := fmt.Sprintf("car_posts_photos/%d/%s", int(carPostID), fileHeader.Filename)
 
 		// upload to s3
@@ -41,6 +40,9 @@ func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName 
 		if err != nil {
 			return nil, fmt.Errorf("Failed to upload the image. ", err.Error())
 		}
+
+		// close the file after we are done
+		file.Close()
 
 		// if image was successfully uploaded to s3 create a database record
 		err = repositories.CreateCarImage(key, uint(carPostID))

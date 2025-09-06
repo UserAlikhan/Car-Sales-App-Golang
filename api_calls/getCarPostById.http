@@ -1,0 +1,2 @@
+GET http://localhost:3000/carPost/getCarPostByID/14
+Content-Type: application/json
