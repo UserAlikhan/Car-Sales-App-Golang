@@ -1,6 +1,6 @@
 package utils
 
-func FindStringKeyStringValue(array []*string, value *string) bool {
+func Find(array []string, value string) bool {
 	for _, element := range array {
 		if element == value {
 			return true
@@ -8,4 +8,16 @@ func FindStringKeyStringValue(array []*string, value *string) bool {
 	}
 
 	return false
+}
+
+func ConvertStringPointerArrayToStringArray(pointerArray []*string) []string {
+	convertedArray := make([]string, len(pointerArray))
+
+	for i, v := range pointerArray {
+		if v != nil {
+			convertedArray[i] = *v
+		}
+	}
+
+	return convertedArray
 }

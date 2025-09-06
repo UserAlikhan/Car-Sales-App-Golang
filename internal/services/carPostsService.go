@@ -95,9 +95,11 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 		// get signed urls
 		signedURL, err := utils.GetSignedUrl(ctx, s3Conf, os.Getenv("BUCKET_NAME"), image.Path, 24*time.Hour)
 		if err != nil {
+			// convert listOutputKeys to be able to use it with Find function
+			listOutputKeysConverted := utils.ConvertStringPointerArrayToStringArray(listOutputKeys)
 			// call FindStringKeyStringValue method that looks for an image in s3
 			// if indeed there is no image in s3 delete the record from DB
-			if !utils.FindStringKeyStringValue(listOutputKeys, &image.Path) {
+			if !utils.Find(listOutputKeysConverted, image.Path) {
 				// delete the post image record
 				repositories.DeleteCarImageDBRecord(image.ID)
 			} else {

@@ -19,7 +19,13 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 		api.PUT("/updateCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UpdateCarBrandHandler())
 		api.DELETE("/deleteCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.DeleteCarBrandHandler())
 		api.POST("/createCarBrandWithModels", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarBrandWithModelsHandler())
-		api.POST("/uploadLogo/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UploadLogoHandler(s3Conf))
+		api.POST(
+			"/uploadLogo/:id",
+			middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(),
+			middlewares.FileSizeCheckerMiddleware(7<<20),
+			middlewares.ImageFileExtensionChecker(),
+			handlers.UploadLogoHandler(s3Conf),
+		)
 	}
 
 	// Route and supporting endpoints for /users
@@ -39,7 +45,12 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	api = r.Group("/carPost")
 	{
 		// 7<<20 means 7MB in bytes
-		api.POST("/createCarPost", middlewares.FileCheckerMiddleware(1<<10), handlers.CreateCarPostHandler(s3Conf))
+		api.POST(
+			"/createCarPost",
+			middlewares.FileSizeCheckerMiddleware(7<<20),
+			middlewares.ImageFileExtensionChecker(),
+			handlers.CreateCarPostHandler(s3Conf),
+		)
 		api.GET("/getAllUsersCarPosts/:userId", handlers.GetAllUsersCarPostsHandler())
 		api.DELETE("/deleteCarPost/:ID", handlers.DeleteCarPostHandler(s3Conf))
 		api.GET("/getCarPostByID/:ID", handlers.GetCarPostByIDHandler(s3Conf))
@@ -49,7 +60,7 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	// Route and supporting endpoints for /carPostsImages
 	api = r.Group("/carPostsImages")
 	{
-		api.POST("/uploadImages", handlers.UploadImagesHandler())
+		api.POST("/uploadImages", middlewares.ImageFileExtensionChecker(), handlers.UploadImagesHandler())
 		api.DELETE("/deleteSingleImage", handlers.DeleteCarPostImageHandler(s3Conf))
 	}
 }
