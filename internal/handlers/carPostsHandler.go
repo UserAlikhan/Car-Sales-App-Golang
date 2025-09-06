@@ -108,3 +108,27 @@ func GetCarPostByIDHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 		)
 	}
 }
+
+func GetCarPostsWithPaginationHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		limit, err := strconv.Atoi(ctx.Query("Limit"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "No 'Limit' parameter was found."})
+			return
+		}
+
+		page, err := strconv.Atoi(ctx.Query("Page"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "No 'Page' parameter was found."})
+			return
+		}
+
+		carPost, err := services.GetCarPostsWithPagination(ctx, s3Conf, limit, page)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, carPost)
+	}
+}

@@ -19,7 +19,7 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 		api.PUT("/updateCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UpdateCarBrandHandler())
 		api.DELETE("/deleteCarBrand/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.DeleteCarBrandHandler())
 		api.POST("/createCarBrandWithModels", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarBrandWithModelsHandler())
-		api.POST("/uploadLogo/:id", handlers.UploadLogoHandler(s3Conf))
+		api.POST("/uploadLogo/:id", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UploadLogoHandler(s3Conf))
 	}
 
 	// Route and supporting endpoints for /users
@@ -42,6 +42,7 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 		api.GET("/getAllUsersCarPosts/:userId", handlers.GetAllUsersCarPostsHandler())
 		api.DELETE("/deleteCarPost/:ID", handlers.DeleteCarPostHandler(s3Conf))
 		api.GET("/getCarPostByID/:ID", handlers.GetCarPostByIDHandler(s3Conf))
+		api.GET("/getCarPosts", handlers.GetCarPostsWithPaginationHandler(s3Conf))
 	}
 
 	// Route and supporting endpoints for /carPostsImages

@@ -56,3 +56,32 @@ func DeleteCarPost(ID uint) error {
 	// CASCADE setted up
 	return database.DB.Unscoped().Delete(&models.CarPostsModel{}, ID).Error
 }
+
+func CountCarPostsTotalRows() int {
+	var totalRows int64
+
+	if err := database.DB.Model(&models.CarPostsModel{}).Count(&totalRows).Error; err != nil {
+		return 0
+	}
+
+	return int(totalRows)
+}
+
+func GetCarPostsWithPagination(limit int, offset int) ([]*models.CarPostsModel, error) {
+	var carPosts []*models.CarPostsModel
+
+	// get the number of carPosts equal to the limit and
+	// pass equal to the offset
+	result := database.DB.
+		Preload("CarModel").
+		Preload("PostImages").
+		Offset(offset).
+		Limit(limit).
+		Find(&carPosts)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return carPosts, nil
+}
