@@ -88,6 +88,43 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 }
 
 func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*models.CarPostsModel, []string, error) {
+	// 1. Try to get car post from Redis cache first
+	// car post key for accessing car post from the Redis cache
+	carPostCacheKey := fmt.Sprintf("carpost:%d", ID)
+
+	var carPost *models.CarPostsModel
+
+	// try to get cache from Redis
+	if cachedData, err := cache.GetCache(carPostCacheKey); err == nil && cachedData != "" {
+		// unmarshal json int the variable
+		if err := json.Unmarshal([]byte(cachedData), &carPost); err != nil {
+			return nil, nil, err
+		}
+
+		// Get image urls from Redis cache
+		imageURLs := []string{}
+
+		// Images are saved individually, so search the images and put them into the slice
+		iter := configs.RedisClient.Scan(ctx, 0, fmt.Sprintf("carpost:%d:image:*", ID), 100).Iterator()
+		for iter.Next(ctx) {
+			// get image value from the Redis cache
+			url, err := cache.GetCache(iter.Val())
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// append the slice
+			imageURLs = append(imageURLs, url)
+		}
+		// if there is no error and len of images retrieved from the Redis cache equal
+		// to the number of database return the data
+		if err := iter.Err(); err == nil && len(imageURLs) == len(carPost.PostImages) {
+			return carPost, imageURLs, nil
+		}
+	}
+
+	// 2. If there is not data in Redis cache fetch data from Database
+
 	// get a car post with preloaded images
 	carPost, err := repositories.GetCarPostByIdWithPostImages(ID)
 	if err != nil {
@@ -136,9 +173,17 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 			}
 		}
 
+		// Save image URL to the Redis cache
+		cache.SetCache(fmt.Sprintf("carpost:%d:image:%d", ID, image.ID), signedURL, 24*time.Hour)
+
 		// if everything is good append an array
 		signedURLs = append(signedURLs, signedURL)
 	}
+
+	// Marshal CarPost
+	marsheledCarPost, _ := json.Marshal(carPost)
+	// Save car post to the Redis cache
+	cache.SetCache(fmt.Sprintf("carpost:%d", ID), string(marsheledCarPost), 24*time.Hour)
 
 	return carPost, signedURLs, nil
 }
