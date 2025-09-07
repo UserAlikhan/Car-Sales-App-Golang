@@ -21,6 +21,10 @@ func GetAllUsersCarPosts(userId uint) ([]*models.CarPostsModel, error) {
 	return repositories.GetAllUsersCarPosts(userId)
 }
 
+func GetCarPostByIDWithoutImageURLs(ID uint) (*models.CarPostsModel, error) {
+	return repositories.GetCarPostById(ID)
+}
+
 func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 	// Check if car post exists
 	carPost, err := repositories.GetCarPostByIdWithPostImages(ID)
