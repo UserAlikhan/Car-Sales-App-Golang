@@ -14,12 +14,20 @@ import (
 func CreateCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var carPost models.CarPostsModel
+
 		// get json data from car_post parameter
 		jsonStr := ctx.PostForm("car_post")
 		if err := json.Unmarshal([]byte(jsonStr), &carPost); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid car_post JSON."})
 			return
 		}
+
+		// get userID parameter from Authorization middleware
+		userID := ctx.GetInt("userID")
+
+		// car post's seller ID should be the same as
+		// userID from the jwt token
+		carPost.SellerID = uint(userID)
 
 		// create car post in the database
 		createdCarPost, err := services.CreateCarPost(&carPost)
@@ -40,7 +48,6 @@ func CreateCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 		}
 
 		ctx.JSON(http.StatusCreated, gin.H{
-			"message":    "Car post was created succsesfully",
 			"car_post":   createdCarPost,
 			"image_urls": imageUrls,
 		})

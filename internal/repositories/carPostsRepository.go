@@ -6,7 +6,15 @@ import (
 )
 
 func CreateCarPost(carPost *models.CarPostsModel) (*models.CarPostsModel, error) {
-	return carPost, database.DB.Create(&carPost).Error
+	if err := database.DB.Create(&carPost).Error; err != nil {
+		return nil, err
+	}
+
+	if err := database.DB.Preload("CarModel").First(carPost, carPost.ID).Error; err != nil {
+		return nil, err
+	}
+
+	return carPost, nil
 }
 
 func GetAllUsersCarPosts(userId uint) ([]*models.CarPostsModel, error) {
