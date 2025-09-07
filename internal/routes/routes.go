@@ -54,13 +54,12 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	// Route and supporting endpoints for /carPost
 	api = r.Group("/carPost")
 	{
-		// 7<<20 means 7MB in bytes
 		api.POST(
 			"/createCarPost",
 			middlewares.AuthMiddleware(),
+			// 7<<20 means 7MB in bytes
 			middlewares.FileSizeCheckerMiddleware(7<<20),
 			middlewares.ImageFileExtensionChecker(),
-			// middlewares.CheckCarPostOwnershipMiddleware(),
 			handlers.CreateCarPostHandler(s3Conf),
 		)
 		api.GET("/getAllUsersCarPosts/:userId", handlers.GetAllUsersCarPostsHandler())
@@ -78,8 +77,22 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	// Route and supporting endpoints for /carPostsImages
 	api = r.Group("/carPostsImages")
 	{
-		api.POST("/uploadImages", middlewares.ImageFileExtensionChecker(), handlers.UploadImagesHandler())
+		// this endpoint allows to upload images to the existing car post
+		// only authorized owners or admin can add images into someone's car post
+		api.POST(
+			"/uploadImages/:carPostID",
+			middlewares.AuthMiddleware(),
+			middlewares.CheckCarPostOwnershipMiddleware(),
+			middlewares.FileSizeCheckerMiddleware(7<<20),
+			middlewares.ImageFileExtensionChecker(),
+			handlers.UploadImagesHandler(s3Conf),
+		)
 		// only authorized owners or admin can delete someone's images
-		api.DELETE("/deleteSingleImage", middlewares.AuthMiddleware(), handlers.DeleteCarPostImageHandler(s3Conf))
+		api.DELETE(
+			"/deleteSingleImage/:ID",
+			middlewares.AuthMiddleware(),
+			middlewares.CheckImageOwnershipMiddleware(),
+			handlers.DeleteCarPostImageHandler(s3Conf),
+		)
 	}
 }

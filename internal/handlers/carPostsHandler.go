@@ -20,6 +20,7 @@ func CreateCarPostHandler(s3Conf *configs.S3Config) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid car_post JSON."})
 			return
 		}
+
 		// create car post in the database
 		createdCarPost, err := services.CreateCarPost(&carPost)
 		if err != nil {

@@ -27,7 +27,7 @@ func GetAllUsersCarPosts(userId uint) ([]*models.CarPostsModel, error) {
 func GetCarPostById(ID uint) (*models.CarPostsModel, error) {
 	var carPost models.CarPostsModel
 
-	result := database.DB.First(&carPost, ID)
+	result := database.DB.Preload("CarModel").Preload("PostImages").First(&carPost, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -17,3 +17,14 @@ func CreateCarImage(path string, carPostID uint) error {
 func DeleteCarImageDBRecord(ID uint) error {
 	return database.DB.Unscoped().Delete(&models.CarImagesModel{}, ID).Error
 }
+
+func GetCarImageByID(ID int) (*models.CarImagesModel, error) {
+	var carImage *models.CarImagesModel
+
+	result := database.DB.Preload("CarPost").First(&carImage, ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return carImage, nil
+}

@@ -31,6 +31,7 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 	if err != nil {
 		return err
 	}
+
 	// If there are images saved proceed
 	if len(carPost.PostImages) > 0 {
 		// get prefix
@@ -110,6 +111,7 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 				continue
 			}
 		}
+
 		// if everything is good append an array
 		signedURLs = append(signedURLs, signedURL)
 	}

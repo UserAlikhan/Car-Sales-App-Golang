@@ -2,6 +2,7 @@ package services
 
 import (
 	"car_sales/internal/configs"
+	"car_sales/internal/models"
 	"car_sales/internal/repositories"
 	"car_sales/internal/utils"
 	"fmt"
@@ -57,4 +58,50 @@ func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName 
 	}
 
 	return uploadedURLs, nil
+}
+
+func GetCarPostImagesURLs(ctx *gin.Context, s3Conf *configs.S3Config, bucketName string, carPostID uint) ([]string, error) {
+	// check if car post exists
+	carPost, err := GetCarPostByIDWithoutImageURLs(carPostID)
+	if err != nil {
+		return nil, err
+	}
+
+	// slice for storing signedURLs
+	var signedURLs []string
+
+	// iterate through each post image
+	for _, image := range carPost.PostImages {
+		// get signed url
+		signedUrl, err := utils.GetSignedUrl(ctx, s3Conf, s3Conf.BucketName, image.Path, 24*time.Hour)
+		if err != nil {
+			return nil, err
+		}
+
+		// save image to the slice
+		signedURLs = append(signedURLs, signedUrl)
+	}
+
+	return signedURLs, nil
+}
+
+func GetCarImageByIDWithoutURL(ID int) (*models.CarImagesModel, error) {
+	return repositories.GetCarImageByID(ID)
+}
+
+func DeleteCarImage(ctx *gin.Context, s3Conf *configs.S3Config, ID int) error {
+	// check if image exists
+	carImage, err := GetCarImageByIDWithoutURL(ID)
+	if err != nil {
+		return err
+	}
+
+	// delete image from s3 bucket
+	err = utils.DeleteFromS3(ctx, s3Conf, carImage.Path)
+	if err != nil {
+		return err
+	}
+
+	// delete image record from database
+	return repositories.DeleteCarImageDBRecord(uint(ID))
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// this middleware goes after AuthMiddleware for routes
+// that need bo accessed only by admins
 func RequireAdminMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		isAdmin, exists := ctx.Get("isAdmin")
