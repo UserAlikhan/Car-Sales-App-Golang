@@ -131,12 +131,12 @@ func GetCarPostsWithPaginationHandler(s3Conf *configs.S3Config) gin.HandlerFunc 
 			return
 		}
 
-		carPost, err := services.GetCarPostsWithPagination(ctx, s3Conf, limit, page)
+		carPosts, err := services.GetCarPostsWithPagination(ctx, s3Conf, limit, page)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		ctx.JSON(http.StatusOK, carPost)
+		ctx.JSON(http.StatusOK, carPosts)
 	}
 }

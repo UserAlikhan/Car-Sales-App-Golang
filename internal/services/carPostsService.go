@@ -1,10 +1,13 @@
 package services
 
 import (
+	"car_sales/internal/cache"
 	"car_sales/internal/configs"
 	"car_sales/internal/models"
 	"car_sales/internal/repositories"
 	"car_sales/internal/utils"
+	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -60,7 +63,28 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 	}
 
 	// call delete car post
-	return repositories.DeleteCarPost(ID)
+	err = repositories.DeleteCarPost(ID)
+	if err != nil {
+		return err
+	}
+
+	// Eager Invalidation
+	// After we deleted a car post we need to delete the cache
+	// because it is not up-to-date
+	// Here we don’t know exact limit/page user used, so best is to delete all carposts:* keys
+	// TODO: After I implement car filtration, delete car posts without filters
+	// and delete car posts with filters for exact the same car type
+
+	// Starts from the begining and fetchs 100 keys per iteration
+	iter := configs.RedisClient.Scan(ctx, 0, "carposts:*", 100).Iterator()
+	for iter.Next(ctx) {
+		_ = cache.DeleteCache(iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*models.CarPostsModel, []string, error) {
@@ -124,6 +148,20 @@ func GetNumberOfCarPosts() int {
 }
 
 func GetCarPostsWithPagination(context *gin.Context, s3Conf *configs.S3Config, limit int, page int) ([]*models.CarPostsModel, error) {
+	// key to access redis cache data
+	cacheKey := fmt.Sprintf("carposts:limit:%d:page:%d", limit, page)
+
+	// 1. Try to get data from the Redis cache first
+	if cached, err := cache.GetCache(cacheKey); err == nil {
+		var carPosts []*models.CarPostsModel
+		if err := json.Unmarshal([]byte(cached), &carPosts); err != nil {
+			return nil, err
+		}
+
+		return carPosts, nil
+	}
+
+	// 2. If there is not data in Redis cache fetch from DB
 	// calculate offset
 	offset := (page - 1) * limit
 
@@ -148,6 +186,10 @@ func GetCarPostsWithPagination(context *gin.Context, s3Conf *configs.S3Config, l
 			carPost.CardPhotoURL = signedURL
 		}
 	}
+
+	// Save data to the Redis cache
+	response, _ := json.Marshal(carPosts)
+	cache.SetCache(cacheKey, string(response), 24*time.Hour)
 
 	return carPosts, err
 }

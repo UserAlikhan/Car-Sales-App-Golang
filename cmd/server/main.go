@@ -5,6 +5,7 @@ import (
 	"car_sales/internal/database"
 	"car_sales/internal/routes"
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -25,10 +26,14 @@ func main() {
 
 	r := gin.Default()
 
+	// Redis cache initialization
+	configs.InitRedis()
+
 	// Setup s3 uploader
 	s3Conf, err := configs.NewS3Config(context.TODO(), os.Getenv("BUCKET_NAME"), os.Getenv("AWS_REGION"))
 	if err != nil {
-		log.Fatalf("Failed to initialize S3 config %v", err)
+		fmt.Printf("Failed to initialize S3 config %v", err)
+		return
 	}
 
 	// Initialize routes
