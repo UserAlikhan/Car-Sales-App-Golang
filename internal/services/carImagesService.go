@@ -1,10 +1,12 @@
 package services
 
 import (
+	"car_sales/internal/cache"
 	"car_sales/internal/configs"
 	"car_sales/internal/models"
 	"car_sales/internal/repositories"
 	"car_sales/internal/utils"
+	"encoding/json"
 	"fmt"
 	"mime/multipart"
 	"os"
@@ -46,7 +48,10 @@ func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName 
 		file.Close()
 
 		// if image was successfully uploaded to s3 create a database record
-		err = repositories.CreateCarImage(key, uint(carPostID))
+		carImage, err := repositories.CreateCarImage(key, uint(carPostID))
+		if err != nil {
+			return nil, err
+		}
 
 		// get signed url
 		signedUrl, err := utils.GetSignedUrl(ctx, s3Conf, os.Getenv("BUCKET_NAME"), key, 24*time.Hour)
@@ -55,6 +60,17 @@ func UploadCarPostImages(ctx *gin.Context, s3Conf *configs.S3Config, bucketName 
 		}
 
 		uploadedURLs = append(uploadedURLs, signedUrl)
+
+		// store new image into the Redis cache
+		cacheKey := fmt.Sprintf("carpost:%d:image:%d", carPostID, carImage.ID)
+		cache.SetCache(cacheKey, signedUrl, 24*time.Hour)
+
+		// After uploading all the images, refresh the carpost cache
+		carPost, err := repositories.GetCarPostByIdWithPostImages(carPostID)
+		if err == nil {
+			marshaledCarPost, _ := json.Marshal(carPost)
+			cache.SetCache(fmt.Sprintf("carpost:%d", carPostID), string(marshaledCarPost), 24*time.Hour)
+		}
 	}
 
 	return uploadedURLs, nil
@@ -96,6 +112,10 @@ func DeleteCarImage(ctx *gin.Context, s3Conf *configs.S3Config, ID int) error {
 		return err
 	}
 
+	// delete image from the Redis cache
+	cacheKey := fmt.Sprintf("carpost:%d:image:%d", carImage.CarPostID, ID)
+	cache.DeleteCache(cacheKey)
+
 	// delete image from s3 bucket
 	err = utils.DeleteFromS3(ctx, s3Conf, carImage.Path)
 	if err != nil {
@@ -103,5 +123,17 @@ func DeleteCarImage(ctx *gin.Context, s3Conf *configs.S3Config, ID int) error {
 	}
 
 	// delete image record from database
-	return repositories.DeleteCarImageDBRecord(uint(ID))
+	err = repositories.DeleteCarImageDBRecord(uint(ID))
+	if err != nil {
+		return err
+	}
+
+	// After deleting the images, refresh the carpost cache
+	carPost, err := repositories.GetCarPostByIdWithPostImages(carImage.CarPostID)
+	if err == nil {
+		marshaledCarPost, _ := json.Marshal(carPost)
+		cache.SetCache(fmt.Sprintf("carpost:%d", carImage.CarPostID), string(marshaledCarPost), 24*time.Hour)
+	}
+
+	return nil
 }

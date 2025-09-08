@@ -5,13 +5,18 @@ import (
 	"car_sales/internal/models"
 )
 
-func CreateCarImage(path string, carPostID uint) error {
+func CreateCarImage(path string, carPostID uint) (*models.CarImagesModel, error) {
 	carImage := models.CarImagesModel{
 		Path:      path,
 		CarPostID: carPostID,
 	}
 
-	return database.DB.Create(&carImage).Error
+	result := database.DB.Create(&carImage)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &carImage, nil
 }
 
 func DeleteCarImageDBRecord(ID uint) error {

@@ -89,6 +89,7 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 
 func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*models.CarPostsModel, []string, error) {
 	// 1. Try to get car post from Redis cache first
+
 	// car post key for accessing car post from the Redis cache
 	carPostCacheKey := fmt.Sprintf("carpost:%d", ID)
 
@@ -105,7 +106,7 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 		imageURLs := []string{}
 
 		// Images are saved individually, so search the images and put them into the slice
-		iter := configs.RedisClient.Scan(ctx, 0, fmt.Sprintf("carpost:%d:image:*", ID), 100).Iterator()
+		iter := configs.RedisClient.Scan(ctx, 0, fmt.Sprintf("carpost:%d:image:*", ID), 0).Iterator()
 		for iter.Next(ctx) {
 			// get image value from the Redis cache
 			url, err := cache.GetCache(iter.Val())
@@ -118,13 +119,13 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 		}
 		// if there is no error and len of images retrieved from the Redis cache equal
 		// to the number of database return the data
-		if err := iter.Err(); err == nil && len(imageURLs) == len(carPost.PostImages) {
+		if err := iter.Err(); err == nil {
 			return carPost, imageURLs, nil
 		}
 	}
 
-	// 2. If there is not data in Redis cache fetch data from Database
-
+	// 2. If there is no data in Redis cache fetch data from Database
+	fmt.Println("GETTING DATA FROM DATABASE")
 	// get a car post with preloaded images
 	carPost, err := repositories.GetCarPostByIdWithPostImages(ID)
 	if err != nil {
@@ -134,50 +135,53 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 	// array for storing signed urls
 	signedURLs := make([]string, 0, len(carPost.PostImages))
 
-	// get a prefix
-	parts := strings.Split(carPost.PostImages[0].Path, "/")
-	parts = parts[:len(parts)-1]
-	prefix := strings.Join(parts, "/")
+	// if there are some post images, we need to get signed url for them
+	if len(carPost.PostImages) > 0 {
+		// get a prefix
+		parts := strings.Split(carPost.PostImages[0].Path, "/")
+		parts = parts[:len(parts)-1]
+		prefix := strings.Join(parts, "/")
 
-	// get list of all present images in s3 bucket for the specific prefix
-	listOutput, err := s3Conf.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
-		Bucket: &s3Conf.BucketName,
-		Prefix: &prefix,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// variable for storing keys from listoutput
-	var listOutputKeys []*string
-	// get all the keys from listoutput
-	for _, output := range listOutput.Contents {
-		listOutputKeys = append(listOutputKeys, output.Key)
-	}
-
-	// iterate through all images for the post
-	// and get signed url for post images
-	for _, image := range carPost.PostImages {
-		// get signed urls
-		signedURL, err := utils.GetSignedUrl(ctx, s3Conf, os.Getenv("BUCKET_NAME"), image.Path, 24*time.Hour)
+		// get list of all present images in s3 bucket for the specific prefix
+		listOutput, err := s3Conf.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+			Bucket: &s3Conf.BucketName,
+			Prefix: &prefix,
+		})
 		if err != nil {
-			// convert listOutputKeys to be able to use it with Find function
-			listOutputKeysConverted := utils.ConvertStringPointerArrayToStringArray(listOutputKeys)
-			// call FindStringKeyStringValue method that looks for an image in s3
-			// if indeed there is no image in s3 delete the record from DB
-			if !utils.Find(listOutputKeysConverted, image.Path) {
-				// delete the post image record
-				repositories.DeleteCarImageDBRecord(image.ID)
-			} else {
-				continue
-			}
+			return nil, nil, err
 		}
 
-		// Save image URL to the Redis cache
-		cache.SetCache(fmt.Sprintf("carpost:%d:image:%d", ID, image.ID), signedURL, 24*time.Hour)
+		// variable for storing keys from listoutput
+		var listOutputKeys []*string
+		// get all the keys from listoutput
+		for _, output := range listOutput.Contents {
+			listOutputKeys = append(listOutputKeys, output.Key)
+		}
 
-		// if everything is good append an array
-		signedURLs = append(signedURLs, signedURL)
+		// iterate through all images for the post
+		// and get signed url for post images
+		for _, image := range carPost.PostImages {
+			// get signed urls
+			signedURL, err := utils.GetSignedUrl(ctx, s3Conf, os.Getenv("BUCKET_NAME"), image.Path, 24*time.Hour)
+			if err != nil {
+				// convert listOutputKeys to be able to use it with Find function
+				listOutputKeysConverted := utils.ConvertStringPointerArrayToStringArray(listOutputKeys)
+				// call FindStringKeyStringValue method that looks for an image in s3
+				// if indeed there is no image in s3 delete the record from DB
+				if !utils.Find(listOutputKeysConverted, image.Path) {
+					// delete the post image record
+					repositories.DeleteCarImageDBRecord(image.ID)
+				} else {
+					continue
+				}
+			}
+
+			// Save image URL to the Redis cache
+			cache.SetCache(fmt.Sprintf("carpost:%d:image:%d", ID, image.ID), signedURL, 24*time.Hour)
+
+			// if everything is good append an array
+			signedURLs = append(signedURLs, signedURL)
+		}
 	}
 
 	// Marshal CarPost
