@@ -48,6 +48,8 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 	// Route and supporting endpoints for /carModel
 	api = r.Group("/carModel")
 	{
+		api.GET("/getCarModels", handlers.GetAllCarModelsHandler())
+		api.GET("getCarModels/:carBrandID", handlers.GetCarModelsByCarBrandIDHandler())
 		api.POST("/createCarModel", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarModelHandler())
 	}
 

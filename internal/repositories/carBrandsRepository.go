@@ -100,5 +100,7 @@ func CreateCarBrandWithModels(carBrand *models.CarBrandsModel) error {
 }
 
 func SaveCarBrand(carBrand *models.CarBrandsModel) error {
+	// .Save method creates new object if there is nothing with the same primary key
+	// or if there is an object with the same id, it updates the record
 	return database.DB.Save(carBrand).Error
 }

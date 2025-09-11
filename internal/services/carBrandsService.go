@@ -127,9 +127,25 @@ func DeleteCarBrand(id int) error {
 }
 
 func CreateCarBrandWithModels(carBrand *models.CarBrandsModel) error {
-	return repositories.CreateCarBrandWithModels(carBrand)
+	err := repositories.CreateCarBrandWithModels(carBrand)
+	if err != nil {
+		return err
+	}
+
+	// if we created a new car brand we need to delete all cache for all car brands
+	cache.DeleteCache(carBrandCacheKey)
+
+	return nil
 }
 
 func SaveCarBrand(carBrand *models.CarBrandsModel) error {
-	return repositories.SaveCarBrand(carBrand)
+	err := repositories.SaveCarBrand(carBrand)
+	if err != nil {
+		return err
+	}
+
+	// if we created or updated a new car brand we need to delete all cache for all car brands
+	cache.DeleteCache(carBrandCacheKey)
+
+	return nil
 }

@@ -8,3 +8,11 @@ import (
 func CreateCarModel(carModel *models.CarModelsModel) error {
 	return repositories.CreateCarModel(carModel)
 }
+
+func GetAllCarModels() ([]*models.CarModelsModel, error) {
+	return repositories.GetAllCarModels()
+}
+
+func GetCarModelsByCarBrandID(carBrandID int) ([]*models.CarModelsModel, error) {
+	return repositories.GetCarModelsByCarBrandID(uint(carBrandID))
+}
