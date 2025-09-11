@@ -19,7 +19,7 @@ func CreateCarBrand(carBrand *models.CarBrandsModel) error {
 func GetAllCarBrands() ([]*models.CarBrandsModel, error) {
 	var carBrands []*models.CarBrandsModel
 
-	result := database.DB.Preload("CarModels").Find(&carBrands)
+	result := database.DB.Find(&carBrands)
 	if result.Error != nil {
 		return nil, result.Error
 	}
