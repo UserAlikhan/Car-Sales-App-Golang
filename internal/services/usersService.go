@@ -46,13 +46,13 @@ func LoginUser(loginData *models.LoginDataModel) (string, error) {
 			return "", fmt.Errorf("Invalid credentials. Please, try again.")
 		}
 	} else {
-		return "", fmt.Errorf("Invalid credentials!")
+		return "", fmt.Errorf("Invalid credentials.")
 	}
 
 	// compare passwords
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Invalide username or password.")
 	}
 
 	tokenString, err := utils.GenerateToken(

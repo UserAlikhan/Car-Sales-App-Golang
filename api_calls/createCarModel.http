@@ -1,6 +1,8 @@
 POST http://localhost:3000/carModel/createCarModel
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwidXNlcm5hbWUiOiIiLCJlbWFpbCI6ImNoZWxAbWFpbC5ydSIsImlzQWRtaW4iOnRydWUsImV4cCI6MTc2MDIwMzA2NX0.rCN3QWKBg1LPqUsg4p24CVHxuBP2PBCaeONZTRI5m3M
 
 {
-    "name": "Enyaq",
+    "name": "sdfdssf",
     "car_brand_id": 27
 }

@@ -45,6 +45,17 @@ func UpdateCarModel(carModel *models.CarModelsModel) (*models.CarModelsModel, er
 	return updatedCarModel, nil
 }
 
+func GetCarModelByID(ID uint) (*models.CarModelsModel, error) {
+	var carModel *models.CarModelsModel
+
+	result := database.DB.First(&carModel, ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return carModel, nil
+}
+
 func DeleteCarModel(ID uint) error {
 	return database.DB.Unscoped().Delete(&models.CarModelsModel{}, ID).Error
 }
