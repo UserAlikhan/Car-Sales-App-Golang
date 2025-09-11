@@ -18,8 +18,12 @@ func CreateCarModel(carModel *models.CarModelsModel) error {
 		return err
 	}
 
+	carModelsByCarBrandIDCacheKey := fmt.Sprintf("carbrand:%d:carmodels", carModel.CarBrandID)
+
 	// Delete all car models cache
 	cache.DeleteCache(carModelsCacheKey)
+	// delete car models for a specific car brand
+	cache.DeleteCache(carModelsByCarBrandIDCacheKey)
 
 	return nil
 }
@@ -57,18 +61,18 @@ func GetAllCarModels() ([]*models.CarModelsModel, error) {
 }
 
 func GetCarModelsByCarBrandID(carBrandID int) ([]*models.CarModelsModel, error) {
-	carModelByCarIDCacheKey := fmt.Sprintf("carbrand:%d:carmodels", carBrandID)
+	carModelByCarBrandIDCacheKey := fmt.Sprintf("carbrand:%d:carmodels", carBrandID)
 	var carModels []*models.CarModelsModel
 
 	// 1. Try to get car models based on carbrand id from the Redis cache first
-	cachedData, err := cache.GetCache(carModelByCarIDCacheKey)
+	cachedData, err := cache.GetCache(carModelByCarBrandIDCacheKey)
 	if err == nil && cachedData != "" {
 		// Unmarshal the json
 		err = json.Unmarshal([]byte(cachedData), &carModels)
 		if err != nil {
 			// if we cannot unmarshal the json (we got an error)
 			// there is something wrong with this json, so delete the cache
-			cache.DeleteCache(carModelByCarIDCacheKey)
+			cache.DeleteCache(carModelByCarBrandIDCacheKey)
 		} else {
 			// If there is no error return data from the cache
 			return carModels, nil
@@ -84,7 +88,7 @@ func GetCarModelsByCarBrandID(carBrandID int) ([]*models.CarModelsModel, error) 
 	// save data to the Redis cache
 	marshaledData, err := json.Marshal(carModels)
 	if err == nil {
-		cache.SetCache(carModelByCarIDCacheKey, string(marshaledData), 24*time.Hour)
+		cache.SetCache(carModelByCarBrandIDCacheKey, string(marshaledData), 24*time.Hour)
 	}
 
 	return carModels, nil
@@ -102,11 +106,8 @@ func UpdateCarModel(carModel *models.CarModelsModel) (*models.CarModelsModel, er
 	// Delete all car models cache
 	cache.DeleteCache(carModelsCacheKey)
 
-	// update specific car model's cache
-	marshaledData, err := json.Marshal(carModel)
-	if err == nil {
-		cache.SetCache(carModelByCarPostIDCacheKey, string(marshaledData), 24*time.Hour)
-	}
+	// delete specific car brand's car models
+	cache.DeleteCache(carModelByCarPostIDCacheKey)
 
 	return carModel, nil
 }

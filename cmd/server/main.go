@@ -4,6 +4,7 @@ import (
 	"car_sales/internal/configs"
 	"car_sales/internal/database"
 	"car_sales/internal/routes"
+	"car_sales/internal/search"
 	"context"
 	"fmt"
 	"log"
@@ -34,6 +35,14 @@ func main() {
 	if err != nil {
 		fmt.Printf("Failed to initialize S3 config %v", err)
 		return
+	}
+
+	// initialize elastic search
+	search.InitElasticSearch()
+
+	// ensure index exists
+	if err := search.CreateIndex(context.Background()); err != nil {
+		fmt.Println("Error creating elastic search index: ", err)
 	}
 
 	// Initialize routes
