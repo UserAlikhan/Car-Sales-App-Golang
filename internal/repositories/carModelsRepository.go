@@ -29,3 +29,22 @@ func GetCarModelsByCarBrandID(carBrandID uint) ([]*models.CarModelsModel, error)
 	}
 	return carModels, nil
 }
+
+func UpdateCarModel(carModel *models.CarModelsModel) (*models.CarModelsModel, error) {
+	result := database.DB.Model(&models.CarModelsModel{}).Where("id = ?", carModel.ID).Updates(carModel)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	var updatedCarModel *models.CarModelsModel
+	result = database.DB.First(&updatedCarModel, carModel.ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return updatedCarModel, nil
+}
+
+func DeleteCarModel(ID uint) error {
+	return database.DB.Unscoped().Delete(&models.CarModelsModel{}, ID).Error
+}

@@ -135,6 +135,12 @@ func CreateCarBrandWithModels(carBrand *models.CarBrandsModel) error {
 	// if we created a new car brand we need to delete all cache for all car brands
 	cache.DeleteCache(carBrandCacheKey)
 
+	// if we created a new car brand with car models, we need to delete cache for cal models
+	if len(carBrand.CarModels) > 0 {
+		carModelsCacheID := fmt.Sprintf("carbrand:%d:carmodels", carBrand.ID)
+		cache.DeleteCache(carModelsCacheID)
+	}
+
 	return nil
 }
 

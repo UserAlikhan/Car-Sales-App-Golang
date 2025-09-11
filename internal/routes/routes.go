@@ -51,6 +51,8 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 		api.GET("/getCarModels", handlers.GetAllCarModelsHandler())
 		api.GET("getCarModels/:carBrandID", handlers.GetCarModelsByCarBrandIDHandler())
 		api.POST("/createCarModel", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.CreateCarModelHandler())
+		api.PUT("/updateCarModel/:ID", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.UpdateCarModelHandler())
+		api.DELETE("deleteCarModel/:ID", middlewares.AuthMiddleware(), middlewares.RequireAdminMiddleware(), handlers.DeleteCarModelHandler())
 	}
 
 	// Route and supporting endpoints for /carPost
