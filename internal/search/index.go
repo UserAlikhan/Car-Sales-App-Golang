@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -47,8 +48,8 @@ func CreateIndex(ctx context.Context) error {
 				"description":    { "type": "text", "analyzer": "standard" },
 				"mileage":        { "type": "integer" },
 				"price":       	  { "type": "float" },
-				"exterior_color": { "type": "float" },
-				"interior_color": { "type": "float" },
+				"exterior_color": { "type": "text" },
+				"interior_color": { "type": "text" },
 				"brand":          { "type": "keyword" },
 				"model":          { "type": "keyword" },
 				"address":        { "type": "text" }
@@ -67,5 +68,25 @@ func CreateIndex(ctx context.Context) error {
 		return fmt.Errorf("failed to create index: %s", createRes.String())
 	}
 
+	return nil
+}
+
+func DeleteIndex(ctx context.Context) error {
+	if ES == nil {
+		return fmt.Errorf("elasticsearch client was not initialized.")
+	}
+
+	res, err := ES.Indices.Delete([]string{CarPostIndex})
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("Index delete failed: %s", res.String())
+	}
+
+	log.Println("Index was deleted successfully.")
 	return nil
 }

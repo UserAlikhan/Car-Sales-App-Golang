@@ -41,6 +41,7 @@ func main() {
 	search.InitElasticSearch()
 
 	// ensure index exists
+	// swap to DeleteIndex method if need to delete your index
 	if err := search.CreateIndex(context.Background()); err != nil {
 		fmt.Println("Error creating elastic search index: ", err)
 	}
