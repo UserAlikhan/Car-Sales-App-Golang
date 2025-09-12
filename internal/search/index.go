@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -87,6 +86,6 @@ func DeleteIndex(ctx context.Context) error {
 		return fmt.Errorf("Index delete failed: %s", res.String())
 	}
 
-	log.Println("Index was deleted successfully.")
+	fmt.Println("Index was deleted successfully.")
 	return nil
 }

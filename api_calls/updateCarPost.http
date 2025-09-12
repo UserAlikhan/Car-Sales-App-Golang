@@ -1,0 +1,9 @@
+PUT http://localhost:3000/carPost/updateCarPost/32
+Content-Type: application/json
+
+{
+    "description": "Skoda superb very good car I like it, I am the first owner",
+    "mileage": 100,
+    "year": 2025,
+    "car_model_id": 2
+}

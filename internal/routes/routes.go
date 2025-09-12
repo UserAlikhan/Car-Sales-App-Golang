@@ -76,6 +76,7 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 		)
 		api.GET("/getCarPostByID/:ID", handlers.GetCarPostByIDHandler(s3Conf))
 		api.GET("/getCarPosts", handlers.GetCarPostsWithPaginationHandler(s3Conf))
+		api.PUT("/updateCarPost/:ID", handlers.UpdateCarPostHandler())
 	}
 
 	// Route and supporting endpoints for /carPostsImages

@@ -10,7 +10,7 @@ func CreateCarPost(carPost *models.CarPostsModel) (*models.CarPostsModel, error)
 		return nil, err
 	}
 
-	if err := database.DB.Preload("CarModel").First(carPost, carPost.ID).Error; err != nil {
+	if err := database.DB.Preload("CarModel").Preload("CarModel.CarBrand").First(&carPost, carPost.ID).Error; err != nil {
 		return nil, err
 	}
 
@@ -92,4 +92,20 @@ func GetCarPostsWithPagination(limit int, offset int) ([]*models.CarPostsModel, 
 	}
 
 	return carPosts, nil
+}
+
+func UpdateCarPost(carPost *models.CarPostsModel) (*models.CarPostsModel, error) {
+	result := database.DB.Model(&models.CarPostsModel{}).Where("id = ?", carPost.ID).Updates(carPost)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	var updatedCarPost *models.CarPostsModel
+
+	result = database.DB.Preload("CarModel").Preload("CarModel.CarBrand").First(&updatedCarPost, carPost.ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return updatedCarPost, nil
 }

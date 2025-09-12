@@ -5,7 +5,9 @@ import (
 	"car_sales/internal/configs"
 	"car_sales/internal/models"
 	"car_sales/internal/repositories"
+	"car_sales/internal/search"
 	"car_sales/internal/utils"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -17,7 +19,29 @@ import (
 )
 
 func CreateCarPost(carPost *models.CarPostsModel) (*models.CarPostsModel, error) {
-	return repositories.CreateCarPost(carPost)
+	carPostData, err := repositories.CreateCarPost(carPost)
+	if err != nil {
+		return nil, err
+	}
+
+	carPostDocument := search.CarPostDoc{
+		ID:            carPostData.ID,
+		Year:          carPostData.Year,
+		Description:   carPostData.Description,
+		Mileage:       carPostData.Mileage,
+		Price:         carPostData.Price,
+		ExteriorColor: carPostData.ExteriorColor,
+		InteriorColor: carPostData.InteriorColor,
+		Brand:         carPostData.CarModel.CarBrand.Name,
+		Model:         carPostData.CarModel.Name,
+		Address:       carPostData.Address,
+	}
+
+	// If car post was created successfully, add a record to elastic search
+	// so users can find it via search mechanism
+	search.CreateCarPostES(context.Background(), carPostDocument)
+
+	return carPostData, nil
 }
 
 func GetAllUsersCarPosts(userId uint) ([]*models.CarPostsModel, error) {
@@ -35,7 +59,7 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 		return err
 	}
 
-	// If there are images saved proceed
+	// If there are images saved, proceed
 	if len(carPost.PostImages) > 0 {
 		// get prefix
 		parts := strings.Split(carPost.PostImages[0].Path, "/")
@@ -84,6 +108,9 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 		return err
 	}
 
+	// Delete the data from Elastic Search as well, so users do not get deleted data
+	search.DeleteCarPost(context.Background(), ID)
+
 	return nil
 }
 
@@ -125,7 +152,7 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 	}
 
 	// 2. If there is no data in Redis cache fetch data from Database
-	fmt.Println("GETTING DATA FROM DATABASE")
+
 	// get a car post with preloaded images
 	carPost, err := repositories.GetCarPostByIdWithPostImages(ID)
 	if err != nil {
@@ -241,4 +268,31 @@ func GetCarPostsWithPagination(context *gin.Context, s3Conf *configs.S3Config, l
 	cache.SetCache(cacheKey, string(response), 24*time.Hour)
 
 	return carPosts, err
+}
+
+func UpdateCarPost(carPost *models.CarPostsModel) error {
+	updatedCarPost, err := repositories.UpdateCarPost(carPost)
+	if err != nil {
+		return err
+	}
+
+	// fields preparation for an Elastic Search Query
+	fields := map[string]interface{}{
+		"year":           updatedCarPost.Year,
+		"description":    updatedCarPost.Description,
+		"mileage":        updatedCarPost.Mileage,
+		"price":          updatedCarPost.Price,
+		"exterior_color": updatedCarPost.ExteriorColor,
+		"interior_color": updatedCarPost.InteriorColor,
+		"brand":          updatedCarPost.CarModel.CarBrand.Name,
+		"model":          updatedCarPost.CarModel.Name,
+		"address":        updatedCarPost.Address,
+	}
+
+	// update a record in Elastic Search
+	search.UpdateCarPost(context.Background(), carPost.ID, fields)
+
+	// delete redis cache
+
+	return nil
 }

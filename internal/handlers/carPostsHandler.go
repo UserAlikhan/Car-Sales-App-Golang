@@ -140,3 +140,31 @@ func GetCarPostsWithPaginationHandler(s3Conf *configs.S3Config) gin.HandlerFunc 
 		ctx.JSON(http.StatusOK, carPosts)
 	}
 }
+
+func UpdateCarPostHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ID, err := strconv.Atoi(ctx.Param("ID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid parameters."})
+			return
+		}
+
+		var carPost *models.CarPostsModel
+
+		if err := ctx.ShouldBindJSON(&carPost); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		carPost.ID = uint(ID)
+
+		// call service to update car post record
+		err = services.UpdateCarPost(carPost)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, carPost)
+	}
+}
