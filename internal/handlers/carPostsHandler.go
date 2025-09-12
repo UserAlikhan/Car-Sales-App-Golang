@@ -159,7 +159,7 @@ func UpdateCarPostHandler() gin.HandlerFunc {
 		carPost.ID = uint(ID)
 
 		// call service to update car post record
-		err = services.UpdateCarPost(carPost)
+		err = services.UpdateCarPost(ctx, carPost)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

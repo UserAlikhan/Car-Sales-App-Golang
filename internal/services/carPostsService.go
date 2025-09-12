@@ -24,6 +24,9 @@ func CreateCarPost(carPost *models.CarPostsModel) (*models.CarPostsModel, error)
 		return nil, err
 	}
 
+	// ADD DATA TO THE ELASTIC SEARCH INDEX
+
+	// prepare data
 	carPostDocument := search.CarPostDoc{
 		ID:            carPostData.ID,
 		Year:          carPostData.Year,
@@ -92,24 +95,29 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 		return err
 	}
 
-	// Eager Invalidation
-	// After we deleted a car post we need to delete the cache
-	// because it is not up-to-date
-	// Here we don’t know exact limit/page user used, so best is to delete all carposts:* keys
-	// TODO: After I implement car filtration, delete car posts without filters
-	// and delete car posts with filters for exact the same car type
+	// DELETE CAR POST CACHE FROM REDIS
+
+	// Delete car post from cache to which this ID is assigned
+	carPostByIDCacheKey := fmt.Sprintf("carpost:%d", ID)
+	cache.DeleteCache(carPostByIDCacheKey)
+
+	// delete car posts with pagiantion data, because we do not know where
+	// deleted car post is, so we need to liquidated all the data
+	carPostWithPaginationKey := "carposts:limit:*"
 
 	// Starts from the begining and fetchs 100 keys per iteration
-	iter := configs.RedisClient.Scan(ctx, 0, "carposts:*", 100).Iterator()
+	iter := configs.RedisClient.Scan(ctx, 0, carPostWithPaginationKey, 100).Iterator()
 	for iter.Next(ctx) {
 		_ = cache.DeleteCache(iter.Val())
 	}
-	if err := iter.Err(); err != nil {
-		return err
+	if err := iter.Err(); err == nil {
+		fmt.Println("Car posts were deleted from cache successfully.")
 	}
 
+	// DELETE CAR POST FROM THE ELASTIC SEARCH INDEX
+
 	// Delete the data from Elastic Search as well, so users do not get deleted data
-	search.DeleteCarPost(context.Background(), ID)
+	search.DeleteCarPost(ctx.Request.Context(), ID)
 
 	return nil
 }
@@ -144,6 +152,7 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 			// append the slice
 			imageURLs = append(imageURLs, url)
 		}
+
 		// if there is no error and len of images retrieved from the Redis cache equal
 		// to the number of database return the data
 		if err := iter.Err(); err == nil {
@@ -180,6 +189,7 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 
 		// variable for storing keys from listoutput
 		var listOutputKeys []*string
+
 		// get all the keys from listoutput
 		for _, output := range listOutput.Contents {
 			listOutputKeys = append(listOutputKeys, output.Key)
@@ -193,6 +203,7 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 			if err != nil {
 				// convert listOutputKeys to be able to use it with Find function
 				listOutputKeysConverted := utils.ConvertStringPointerArrayToStringArray(listOutputKeys)
+
 				// call FindStringKeyStringValue method that looks for an image in s3
 				// if indeed there is no image in s3 delete the record from DB
 				if !utils.Find(listOutputKeysConverted, image.Path) {
@@ -210,6 +221,8 @@ func GetCarPostByID(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) (*model
 			signedURLs = append(signedURLs, signedURL)
 		}
 	}
+
+	// SAVE CAR POST DATA TO THE REDIS CACHE
 
 	// Marshal CarPost
 	marsheledCarPost, _ := json.Marshal(carPost)
@@ -270,11 +283,13 @@ func GetCarPostsWithPagination(context *gin.Context, s3Conf *configs.S3Config, l
 	return carPosts, err
 }
 
-func UpdateCarPost(carPost *models.CarPostsModel) error {
+func UpdateCarPost(ctx *gin.Context, carPost *models.CarPostsModel) error {
 	updatedCarPost, err := repositories.UpdateCarPost(carPost)
 	if err != nil {
 		return err
 	}
+
+	// UPDATE ELASTIC SEARCH DATA
 
 	// fields preparation for an Elastic Search Query
 	fields := map[string]interface{}{
@@ -290,9 +305,30 @@ func UpdateCarPost(carPost *models.CarPostsModel) error {
 	}
 
 	// update a record in Elastic Search
-	search.UpdateCarPost(context.Background(), carPost.ID, fields)
+	search.UpdateCarPost(ctx.Request.Context(), carPost.ID, fields)
 
-	// delete redis cache
+	// DELETE REDIS CACHE
+
+	// delete car posts with pagiantion data cache, because we do not know where
+	// deleted car post is, so we need to liquidated all the data
+	carPostWithPaginationKey := "carposts:limit:*"
+
+	// Starts from the begining and fetchs 100 keys per iteration
+	iter := configs.RedisClient.Scan(ctx, 0, carPostWithPaginationKey, 100).Iterator()
+	for iter.Next(ctx) {
+		_ = cache.DeleteCache(iter.Val())
+	}
+	if err := iter.Err(); err == nil {
+		fmt.Println("Car posts were deleted from cache successfully.")
+	}
+
+	// update spefic car post's cache
+	carPostByIDCacheKey := fmt.Sprintf("carpost:%d", carPost.ID)
+
+	marsaledCarPost, err := json.Marshal(updatedCarPost)
+	if err == nil {
+		cache.SetCache(carPostByIDCacheKey, string(marsaledCarPost), 24*time.Hour)
+	}
 
 	return nil
 }

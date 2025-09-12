@@ -1,4 +1,4 @@
-PUT http://localhost:3000/carPost/updateCarPost/32
+PUT http://localhost:3000/carPost/updateCarPost/33
 Content-Type: application/json
 
 {
