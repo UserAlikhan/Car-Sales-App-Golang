@@ -17,7 +17,7 @@ Hide complexities from handler
 
 // GLOBAL VARIABLE
 // car brand's cache name
-var carBrandCacheKey = fmt.Sprintf("carbrand")
+var carBrandCacheKey = "carbrand"
 
 func CreateCarBrand(carBrand *models.CarBrandsModel) error {
 	err := repositories.CreateCarBrand(carBrand)
