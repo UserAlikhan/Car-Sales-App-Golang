@@ -1,0 +1,3 @@
+GET http://localhost:3000/carPost/getAllCarPosts
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwidXNlcm5hbWUiOiIiLCJlbWFpbCI6ImNoZWxAbWFpbC5ydSIsImlzQWRtaW4iOnRydWUsImV4cCI6MTc2MDM5NjI3NX0.THQLGbRk8Gx1OivcwsA2NIAsSlC6EmJO1zWbtGm1tTk

@@ -332,3 +332,7 @@ func UpdateCarPost(ctx *gin.Context, carPost *models.CarPostsModel) error {
 
 	return nil
 }
+
+func GetAllCarPostsWithoutPagination(ctx *gin.Context) ([]*models.CarPostsModel, error) {
+	return repositories.GetAllCarPostsWithoutPagination()
+}

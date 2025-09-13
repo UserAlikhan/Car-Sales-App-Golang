@@ -95,3 +95,52 @@ func DeleteCarPost(ctx context.Context, id uint) error {
 
 	return nil
 }
+
+func SearchCarPost(ctx context.Context, q string, from int, size int) (map[string]interface{}, error) {
+	if ES == nil {
+		return nil, fmt.Errorf("es is not initialized.")
+	}
+
+	// multi_match search across title/description/brand/model
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"multi_match": map[string]interface{}{
+				"query":  q,
+				"fields": []string{"title", "description", "brand", "model"},
+				// fizziness controls how much a search query can tolerate misspellings
+				"fuzziness": "AUTO",
+			},
+		},
+		"from": from,
+		"size": size,
+	}
+
+	var buf bytes.Buffer
+
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
+		return nil, err
+	}
+
+	res, err := ES.Search(
+		ES.Search.WithContext(ctx),
+		ES.Search.WithIndex(CarPostIndex),
+		ES.Search.WithBody(&buf),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, fmt.Errorf("search error: %s", res.String())
+	}
+
+	var out map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}

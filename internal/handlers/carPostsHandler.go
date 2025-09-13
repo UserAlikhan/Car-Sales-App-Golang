@@ -168,3 +168,15 @@ func UpdateCarPostHandler() gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, carPost)
 	}
 }
+
+func GetAllCarPostsWithoutPaginationHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		carPosts, err := services.GetAllCarPostsWithoutPagination(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, carPosts)
+	}
+}

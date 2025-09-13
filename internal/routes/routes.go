@@ -4,6 +4,7 @@ import (
 	"car_sales/internal/configs"
 	"car_sales/internal/handlers"
 	"car_sales/internal/middlewares"
+	"car_sales/internal/search"
 
 	"github.com/gin-gonic/gin"
 )
@@ -76,7 +77,19 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 		)
 		api.GET("/getCarPostByID/:ID", handlers.GetCarPostByIDHandler(s3Conf))
 		api.GET("/getCarPosts", handlers.GetCarPostsWithPaginationHandler(s3Conf))
-		api.PUT("/updateCarPost/:ID", handlers.UpdateCarPostHandler())
+		api.PUT(
+			"/updateCarPost/:ID",
+			middlewares.AuthMiddleware(),
+			middlewares.CheckCarPostOwnershipMiddleware(),
+			handlers.UpdateCarPostHandler(),
+		)
+		api.GET("/search", search.SearchCarPostHandler())
+		api.GET(
+			"/getAllCarPosts",
+			middlewares.AuthMiddleware(),
+			middlewares.RequireAdminMiddleware(),
+			handlers.GetAllCarPostsWithoutPaginationHandler(),
+		)
 	}
 
 	// Route and supporting endpoints for /carPostsImages

@@ -1,6 +1,8 @@
 package models
 
 import (
+	"encoding/json"
+
 	"gorm.io/gorm"
 )
 
@@ -18,8 +20,18 @@ type CarPostsModel struct {
 	CarModelID    uint    `json:"car_model_id" gorm:"not null"`
 	CardPhotoURL  string  `json:"card_photo_url" gorm:"-"`
 
-	CarModel   CarModelsModel   `json:"car_model" gorm:"foreignKey:CarModelID"`                                                // Many-To-One
+	CarModel   *CarModelsModel  `json:"car_model" gorm:"foreignKey:CarModelID"`                                                // Many-To-One
 	PostImages []CarImagesModel `json:"post_images" gorm:"foreignKey:CarPostID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // One-To-Many
+}
+
+func (carPostModel *CarPostsModel) MarshalJSON() ([]byte, error) {
+	type Alias CarPostsModel
+
+	if carPostModel.CarModel != nil && carPostModel.CarModel.ID == 0 {
+		carPostModel.CarModel = nil
+	}
+
+	return json.Marshal((*Alias)(carPostModel))
 }
 
 func (CarPostsModel) TableName() string {
