@@ -5,11 +5,18 @@ import (
 	"car_sales/internal/handlers"
 	"car_sales/internal/middlewares"
 	"car_sales/internal/search"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/time/rate"
 )
 
 func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
+	// Apply rate limiter middleware globally
+	// no more than 3 requests per second for each user
+	// and 100 users handling
+	r.Use(middlewares.RateLimiterMiddleware(rate.Every(time.Second/3), 100))
+
 	// Route and supporting endpoints for /carBrand
 	api := r.Group("/carBrand")
 	{

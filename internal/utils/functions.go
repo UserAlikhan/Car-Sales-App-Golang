@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"net"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -39,4 +41,14 @@ func GetIDParam(ctx *gin.Context, keys ...string) (int, error) {
 	}
 
 	return 0, fmt.Errorf("no valid ID param found")
+}
+
+func GetIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		fmt.Printf("Error parsing IP: %s", err.Error())
+		return ""
+	}
+
+	return host
 }
