@@ -40,7 +40,7 @@ func CreateCarPostES(ctx context.Context, doc CarPostDoc) error {
 }
 
 // This method updates carpost data in the Elastic Search
-func UpdateCarPost(ctx context.Context, id uint, fields map[string]interface{}) error {
+func UpdateCarPostES(ctx context.Context, id uint, fields map[string]interface{}) error {
 	if ES == nil {
 		return fmt.Errorf("es is not initialized.")
 	}
@@ -71,7 +71,7 @@ func UpdateCarPost(ctx context.Context, id uint, fields map[string]interface{}) 
 }
 
 // This function deletes car post in the Elastic Search
-func DeleteCarPost(ctx context.Context, id uint) error {
+func DeleteCarPostES(ctx context.Context, id uint) error {
 	if ES == nil {
 		return fmt.Errorf("es in not initialized.")
 	}

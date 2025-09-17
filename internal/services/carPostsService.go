@@ -117,7 +117,7 @@ func DeleteCarPost(ctx *gin.Context, s3Conf *configs.S3Config, ID uint) error {
 	// DELETE CAR POST FROM THE ELASTIC SEARCH INDEX
 
 	// Delete the data from Elastic Search as well, so users do not get deleted data
-	search.DeleteCarPost(ctx.Request.Context(), ID)
+	search.DeleteCarPostES(ctx.Request.Context(), ID)
 
 	return nil
 }
@@ -305,7 +305,7 @@ func UpdateCarPost(ctx *gin.Context, carPost *models.CarPostsModel) error {
 	}
 
 	// update a record in Elastic Search
-	search.UpdateCarPost(ctx.Request.Context(), carPost.ID, fields)
+	search.UpdateCarPostES(ctx.Request.Context(), carPost.ID, fields)
 
 	// DELETE REDIS CACHE
 

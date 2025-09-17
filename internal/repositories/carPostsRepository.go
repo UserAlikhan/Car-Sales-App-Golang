@@ -113,7 +113,7 @@ func UpdateCarPost(carPost *models.CarPostsModel) (*models.CarPostsModel, error)
 func GetAllCarPostsWithoutPagination() ([]*models.CarPostsModel, error) {
 	var carPosts []*models.CarPostsModel
 
-	result := database.DB.Find(&carPosts)
+	result := database.DB.Preload("CarModel").Preload("CarModel.CarBrand").Find(&carPosts)
 	if result.Error != nil {
 		return nil, result.Error
 	}
