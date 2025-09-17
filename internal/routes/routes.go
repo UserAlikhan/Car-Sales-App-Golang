@@ -4,7 +4,6 @@ import (
 	"car_sales/internal/configs"
 	"car_sales/internal/handlers"
 	"car_sales/internal/middlewares"
-	"car_sales/internal/search"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -90,7 +89,7 @@ func InitRoutes(r *gin.Engine, s3Conf *configs.S3Config) {
 			middlewares.CheckCarPostOwnershipMiddleware(),
 			handlers.UpdateCarPostHandler(),
 		)
-		api.GET("/search", search.SearchCarPostHandler())
+		api.GET("/search", handlers.SearchCarPostHandler(s3Conf))
 		api.GET(
 			"/getAllCarPosts",
 			middlewares.AuthMiddleware(),

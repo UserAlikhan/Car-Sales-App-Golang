@@ -96,7 +96,7 @@ func DeleteCarPostES(ctx context.Context, id uint) error {
 	return nil
 }
 
-func SearchCarPost(ctx context.Context, q string, from int, size int) (map[string]interface{}, error) {
+func SearchCarPost(ctx context.Context, q string, from int, size int) (*CarPostSearchResponse, error) {
 	if ES == nil {
 		return nil, fmt.Errorf("es is not initialized.")
 	}
@@ -137,7 +137,7 @@ func SearchCarPost(ctx context.Context, q string, from int, size int) (map[strin
 		return nil, fmt.Errorf("search error: %s", res.String())
 	}
 
-	var out map[string]interface{}
+	var out *CarPostSearchResponse
 	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
 		return nil, err
 	}

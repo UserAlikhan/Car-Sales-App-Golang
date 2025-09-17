@@ -336,3 +336,36 @@ func UpdateCarPost(ctx *gin.Context, carPost *models.CarPostsModel) error {
 func GetAllCarPostsWithoutPagination(ctx *gin.Context) ([]*models.CarPostsModel, error) {
 	return repositories.GetAllCarPostsWithoutPagination()
 }
+
+func GetCarPostsByIDsArray(ctx *gin.Context, s3Conf *configs.S3Config, IDs []int, size int) ([]*models.CarPostsModel, error) {
+	var carPosts []*models.CarPostsModel
+
+	for _, id := range IDs {
+		carPost, err := GetCarPostByIDWithoutImageURLs(uint(id))
+		if err != nil {
+			// if there is an error, it means there is a data in elastic search, but not in db
+			// so delete this record from elastic search
+			search.DeleteCarPostES(ctx, uint(id))
+			continue
+		}
+
+		// get image url for the card on the website
+		var signedURL string
+		if carPost.PostImages[0].Path != "" {
+			signedURL, err = utils.GetSignedUrl(ctx, s3Conf, s3Conf.BucketName, carPost.PostImages[0].Path, 24*time.Hour)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		carPost.CardPhotoURL = signedURL
+
+		carPosts = append(carPosts, carPost)
+
+		if len(carPosts) == size {
+			return carPosts, nil
+		}
+	}
+
+	return carPosts, nil
+}
